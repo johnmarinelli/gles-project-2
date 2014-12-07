@@ -5,6 +5,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.os.SystemClock;
 
 public class Triangle {
 
@@ -38,6 +40,7 @@ public class Triangle {
 	private int mProgram;
 	private int mPositionHandle;
 	private int mColorHandle;
+	private int mMVPMatrixHandle;
 	
 	public Triangle() {
 		/* 
@@ -71,7 +74,7 @@ public class Triangle {
 		GLES20.glLinkProgram(mProgram);
 	}
 	
-	public void draw() {
+	public void draw(float[] mvpMatrix) {
 		/* add program to gles environment */
 		GLES20.glUseProgram(mProgram);
 		
@@ -94,6 +97,12 @@ public class Triangle {
 		
 		/* set color for drawing triangle */
 		GLES20.glUniform4fv(mColorHandle, 1, color, 0);
+		
+		/* get handle to shape's transformation matrix */
+		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+		
+		/* pass projection & view transformation into shader */
+		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 		
 		/* draw triangle */
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mVertexCount);

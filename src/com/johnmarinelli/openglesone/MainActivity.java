@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 
 public class MainActivity extends ActionBarActivity {
 	
@@ -41,12 +42,42 @@ public class MainActivity extends ActionBarActivity {
 class MyGLSurfaceView extends GLSurfaceView {
 
 	private MyGLRenderer mRenderer;
+	private float mPreviousX = 0f, mPreviousY = 0f;
+	private final float TOUCH_SCALE_FACTOR = 180f / 320;
 	
 	public MyGLSurfaceView(Context context) {
 		super(context);
 		this.setEGLContextClientVersion(2);
 		mRenderer = new MyGLRenderer();
 		this.setRenderer(mRenderer);
+	}
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent e) {
+		float x = e.getX();
+		float y = e.getY();
+		
+		switch(e.getAction()) {
+		case MotionEvent.ACTION_MOVE:
+			float dx = x - mPreviousX;
+			float dy = y - mPreviousY;
+			
+			/* reverse direction of rotation above midline */
+			if(y > getHeight() / 2) {
+				dx *= -1;
+			}
+			/* reverse direction of rotation to left of midline */
+			if(x < getWidth() / 2) {
+				dy *= -1;
+			}
+			
+			mRenderer.setAngle(mRenderer.getAngle() +
+					((dx+dy) * TOUCH_SCALE_FACTOR));
+		}
+		
+		mPreviousX = x;
+		mPreviousY = y;
+		return true;
 	}
 	
 }
