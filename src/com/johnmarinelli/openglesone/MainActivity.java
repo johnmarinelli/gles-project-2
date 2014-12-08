@@ -48,7 +48,7 @@ class MyGLSurfaceView extends GLSurfaceView {
 	public MyGLSurfaceView(Context context) {
 		super(context);
 		this.setEGLContextClientVersion(2);
-		mRenderer = new MyGLRenderer();
+		mRenderer = new MyGLRenderer(context);
 		this.setRenderer(mRenderer);
 	}
 	

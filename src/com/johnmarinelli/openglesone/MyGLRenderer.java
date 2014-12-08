@@ -1,12 +1,13 @@
 package com.johnmarinelli.openglesone;
 
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.Matrix;
-import android.os.SystemClock;
 import android.util.Log;
 
 public class MyGLRenderer implements Renderer {
@@ -20,6 +21,21 @@ public class MyGLRenderer implements Renderer {
 	private float[] mRotationMatrix = new float[16];
 	
 	private float mAngle = 0f;
+	
+	public static String mVertexShaderCode;
+	public static String mFragmentShaderCode;
+	
+	private Context mContext;
+	
+	public MyGLRenderer(Context ctx) {
+		mContext = ctx;
+		initShaders(ctx);
+	}
+	
+	private void initShaders(Context ctx) {		
+		mVertexShaderCode = Utilities.readFile(ctx, R.raw.vertexshader);
+		mFragmentShaderCode = Utilities.readFile(ctx, R.raw.fragshader);
+	}
 
 	@Override
 	public void onDrawFrame(GL10 unused) {
@@ -46,8 +62,8 @@ public class MyGLRenderer implements Renderer {
 		
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 		
-		mTriangle.draw(scratch);
-		//mSquare.draw(mMVPMatrix);
+//		mTriangle.draw(scratch);
+		mSquare.draw(scratch);
 	}
 	
 	public void setAngle(float angle) { 
