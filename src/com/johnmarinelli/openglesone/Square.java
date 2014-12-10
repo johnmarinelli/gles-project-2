@@ -20,7 +20,7 @@ public class Square extends Object2d {
 		super(mSquareCoords, mDrawOrder);
 	}
 	
-	public void draw(float[] mvpMatrix) {
-		super.draw(mvpMatrix);
+	public void draw(Camera camera) {
+		super.draw(camera);
 	}
 }

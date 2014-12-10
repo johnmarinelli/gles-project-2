@@ -14,11 +14,16 @@ public class MyGLRenderer implements Renderer {
 	
 	private Triangle mTriangle;
 	private Square mSquare;
+
+	private Camera mCamera;
 	
 	private float[] mProjectionMatrix = new float[16];
 	private float[] mViewMatrix = new float[16];
 	private float[] mMVPMatrix = new float[16];
 	private float[] mRotationMatrix = new float[16];
+	
+	private float mViewportWidth = 0;
+	private float mViewportHeight = 0;
 	
 	private float mAngle = 0f;
 	
@@ -32,6 +37,20 @@ public class MyGLRenderer implements Renderer {
 		initShaders(ctx);
 	}
 	
+	private void setCamera() {
+		Vector3d eye = new Vector3d(0, 0, 0);
+		Vector3d center = new Vector3d(-3, 0, 0);
+		Vector3d up = new Vector3d(0, 1, 0);
+
+		float ratio = (float) mViewportWidth / mViewportHeight;
+		Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+		
+		mCamera = new Camera(eye, center, up,
+								-ratio, ratio,
+								-1, 1,
+								 3, 7);
+	}
+	
 	private void initShaders(Context ctx) {		
 		mVertexShaderCode = Utilities.readFile(ctx, R.raw.vertexshader);
 		mFragmentShaderCode = Utilities.readFile(ctx, R.raw.fragshader);
@@ -43,27 +62,32 @@ public class MyGLRenderer implements Renderer {
 		 * set camera matrix
 		 * matrix to store in, offset, eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz
 		 */
-		Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1f, 0f);
+		//Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1f, 0f);
+		Vector3d eye = new Vector3d(0, 0, -3);
+		Vector3d center = new Vector3d(-0, 0, 0);
+		Vector3d up = new Vector3d(0, 1, 0);
+		
+		mCamera.setCameraView(eye, center, up);
 		
 		/*
 		 * calculate projection & view transformation
 		 */
-		Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+		//Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
 		
 		/* create rotation transformation */
-		float[] scratch = new float[16]; 
+		//float[] scratch = new float[16]; 
 		
 		/* rotate around the (0, 0, -1) axis */
-		Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1f);
+		//Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1f);
 		
 		/* combine rotation matrix with projection & view matrices */
-		Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
+		//Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
 		
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 		
 //		mTriangle.draw(scratch);
-		mSquare.draw(scratch);
+		mSquare.draw(mCamera);
 	}
 	
 	public void setAngle(float angle) { 
@@ -81,13 +105,10 @@ public class MyGLRenderer implements Renderer {
 	@Override
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
 		GLES20.glViewport(0, 0, width, height);
+		mViewportWidth = width;
+		mViewportHeight = height;
 		
-		float ratio = (float) width / height;
-		
-		/*
-		 * projection matrix is applied to object coordinates in onDrawFrame
-		 */
-		Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+		setCamera();
 		mTriangle = new Triangle();
 		mSquare = new Square();
 	}
@@ -100,29 +121,6 @@ public class MyGLRenderer implements Renderer {
 	public void onSurfaceCreated(GL10 arg0, EGLConfig config) {
 		GLES20.glClearColor(0, 0, 0, 1);
 	}
-	
-	
-	/*
-	 * Code to rendering vertices of a shape
-	 */
-	public static final String vertexShaderCode = 
-		/* provides hook to manipulate coords of objects using this vertex shader */
-		"uniform mat4 uMVPMatrix;"    +
-		"attribute vec4 vPosition;"  +
-		"void main() {" 			 +
-		/* matrix must be included as modifier of gl_Position */
-		"  gl_Position = uMVPMatrix*vPosition;" +
-		"}";
-	
-	/*
-	 * Code for rendering face of shape with colors, textures, lighting, etc
-	 */
-	public static final String fragmentShaderCode =
-		"precision mediump float;"  +
-		"uniform vec4 vColor;" 	    +
-		"void main() {"			    +
-		"  gl_FragColor = vColor;"  +
-		"}";
 	
 	public static int loadShader(int type, String shaderCode) {
 		/*

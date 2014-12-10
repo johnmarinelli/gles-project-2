@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 public abstract class Object2d {
 	
@@ -18,14 +19,15 @@ public abstract class Object2d {
 	/* number of coordinates per vertex */
 	static final int COORDS_PER_VERTEX = 3;
 	
+	/* model matrix */
+	private float[] mModelMatrix = new float[16];
+	
+	/* model-view-projection matrix */
+	private float[] mMVPMatrix = new float[16];
+	
 	/* float arrays holding coordinates & color */
 	private float[] mCoords;
-	private float[] mColor = {
-		1f,
-		.5f,
-		.25f,
-		1
-	};
+	private float[] mColor = { 1f, .5f,	.25f, 1	};
 	
 	/* order in which to draw vertices */
 	private short[] mDrawOrder;
@@ -87,7 +89,10 @@ public abstract class Object2d {
 		GLES20.glLinkProgram(mProgram);
 	}
 	
-	public void draw(float[] mvpMatrix) {
+	public void draw(Camera camera) {
+		float[] projectionMatrix = camera.getProjectionMatrix();
+		float[] viewMatrix = camera.getViewMatrix();
+		
 		/* add program to gles environment */
 		GLES20.glUseProgram(mProgram);
 		
@@ -113,9 +118,13 @@ public abstract class Object2d {
 		
 		/* get handle to shape's transformation matrix */
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+		/*
+		 * calculate projection & view transformation
+		 */
+		Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 		
 		/* pass projection & view transformation into shader */
-		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 		
 		/* draw object */
 		/*GLES20.glDrawElements(GLES20.GL_TRIANGLES, mDrawOrder.length,

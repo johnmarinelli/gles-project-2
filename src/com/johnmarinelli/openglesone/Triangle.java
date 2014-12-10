@@ -18,7 +18,7 @@ public class Triangle extends Object2d{
 		super(TriangleCoords, TriangleDrawOrder);
 	}
 	
-	public void draw(float[] mvpMatrix) {
-		super.draw(mvpMatrix);
+	public void draw(Camera camera) {
+		super.draw(camera);
 	}
 }
