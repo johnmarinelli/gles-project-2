@@ -19,15 +19,10 @@ public abstract class Object2d {
 	/* number of coordinates per vertex */
 	static final int COORDS_PER_VERTEX = 3;
 	
-	/* orientation matrices */
-	private Vector3d mPosition = new Vector3d(0, 0, 0);
-	private Vector3d mRotationAxis = new Vector3d(0, 0, 0);
-	private Vector3d mScale = new Vector3d(1, 1, 1);
+	float angle = 0f;
 	
-	private float[] mPositionMatrix = new float[16];
-	private float[] mRotationMatrix = new float[16];
-	private float mRotationAngle = 0f;
-	private float[] mScaleMatrix = new float[16];
+	/* orientation to hold transformation info */
+	private Orientation mOrientation = new Orientation();
 	
 	/* model matrix */
 	private float[] mModelMatrix = new float[16];
@@ -103,50 +98,15 @@ public abstract class Object2d {
 	}
 	
 	public void draw(Camera camera) {
-		/* set position vector */
-		mPosition.mX = 0f;
-		mPosition.mY = 0f;
-		mPosition.mZ = 0f;
-		
-		/* set rotation vector */
-		mRotationAxis.mX = 0f;
-		mRotationAxis.mY = 0f;
-		mRotationAxis.mZ = 1f;
-		
-		/* set scale vector */
-		mScale.mX = 1f;
-		mScale.mY = 1f;
-		mScale.mZ = 1f;
-		
 		float[] projectionMatrix = camera.getProjectionMatrix();
 		float[] viewMatrix = camera.getViewMatrix();
-		
-		/* build translation matrix */
-		Matrix.setIdentityM(mPositionMatrix, 0);
-		Matrix.translateM(mPositionMatrix, 0, mPosition.mX, mPosition.mY, mPosition.mZ);
-		
-		/* build rotation matrix */
-		Matrix.setIdentityM(mRotationMatrix, 0);
-		Matrix.rotateM(mRotationMatrix, 0, 
-				   mRotationAngle++, 
-				   mRotationAxis.mX, 
-				   mRotationAxis.mY, 
-				   mRotationAxis.mZ);
-		
-		/* build scale matrix */
-		Matrix.setIdentityM(mScaleMatrix, 0);
-		Matrix.scaleM(mScaleMatrix, 0, mScale.mX, mScale.mY, mScale.mZ);
-		
-		float[] tempMatrix = new float[16];
-   
-		/* rotate object around axis, then translate */
-		Matrix.multiplyMM(tempMatrix, 0, mPositionMatrix, 0, mRotationMatrix, 0);
-		
-		/* build scale matrix */
-		Matrix.setIdentityM(mModelMatrix, 0);
-
-		/* scale then store in model matrix */
-		Matrix.multiplyMM(mModelMatrix, 0, tempMatrix, 0, mScaleMatrix, 0);
+	
+		/* do model matrix stuff */
+		mOrientation.setPosition(0, 0, 0);
+		mOrientation.setScale(1, 1, 1);
+		mOrientation.setRotationAxis(0, 0, 1);
+		mOrientation.setRotationAngle(angle++);
+		mModelMatrix = mOrientation.getOrientationMatrix();		
 		
 		/* add program to gles environment */
 		GLES20.glUseProgram(mProgram);
@@ -179,16 +139,11 @@ public abstract class Object2d {
 	     
 	    /* build MVP matrix */
 	    Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mModelViewMatrix, 0);
-	    
-		/* calculate projection & view transformation */
-		//Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 		
 		/* pass projection & view transformation into shader */
 		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 		
 		/* draw object */
-		/*GLES20.glDrawElements(GLES20.GL_TRIANGLES, mDrawOrder.length,
-				GLES20.GL_UNSIGNED_SHORT, mDrawListBuffer);*/
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, mVertexCount);
 		
 		/* disable vertex array */
