@@ -96,8 +96,8 @@ public abstract class Object2d {
 		/* create OpenGLES program executable */
 		GLES20.glLinkProgram(mProgram);
 	}
-	
-	public void draw(Camera camera) {
+
+	private void updateMatrices(Camera camera) {
 		float[] projectionMatrix = camera.getProjectionMatrix();
 		float[] viewMatrix = camera.getViewMatrix();
 	
@@ -106,7 +106,26 @@ public abstract class Object2d {
 		mOrientation.setScale(1, 1, 1);
 		mOrientation.setRotationAxis(0, 0, 1);
 		mOrientation.setRotationAngle(angle++);
-		mModelMatrix = mOrientation.getOrientationMatrix();		
+		mModelMatrix = mOrientation.getOrientationMatrix();	
+		
+		/* build model view matrix */
+	    Matrix.multiplyMM(mModelViewMatrix, 0, viewMatrix, 0, mModelMatrix, 0);
+	     
+	    /* build MVP matrix */
+	    Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mModelViewMatrix, 0);
+	}
+	
+	public void draw(Camera camera) {
+		/*float[] projectionMatrix = camera.getProjectionMatrix();
+		float[] viewMatrix = camera.getViewMatrix();
+	
+		/* do model matrix stuff 
+		mOrientation.setPosition(0, 0, 0);
+		mOrientation.setScale(1, 1, 1);
+		mOrientation.setRotationAxis(0, 0, 1);
+		mOrientation.setRotationAngle(angle++);
+		mModelMatrix = mOrientation.getOrientationMatrix();		*/
+		updateMatrices(camera);
 		
 		/* add program to gles environment */
 		GLES20.glUseProgram(mProgram);
@@ -134,11 +153,11 @@ public abstract class Object2d {
 		/* get handle to shape's transformation matrix */
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
 
-		/* build model view matrix */
+		/* build model view matrix 
 	    Matrix.multiplyMM(mModelViewMatrix, 0, viewMatrix, 0, mModelMatrix, 0);
 	     
-	    /* build MVP matrix */
-	    Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mModelViewMatrix, 0);
+	    /* build MVP matrix 
+	    Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mModelViewMatrix, 0);*/
 		
 		/* pass projection & view transformation into shader */
 		GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);

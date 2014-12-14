@@ -16,7 +16,6 @@ public class Orientation {
 	 */
 	private float[] mPositionMatrix = new float[16];
 	private float[] mRotationMatrix = new float[16];
-	private float mRotationAngle = 0f;
 	private float[] mScaleMatrix = new float[16];
 	
 	private float[] mOrientationMatrix = new float[16];
